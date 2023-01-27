@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"time"
 
 	"go.linka.cloud/printer/internal/slices"
 )
@@ -83,9 +84,27 @@ func (c columns) Values(v any, f map[string]func(v any) string) []string {
 		}
 		v := derefValue(val.Field(c.index))
 		if !v.IsValid() {
+			// TODO(adphi): add options to print nil as "-" or "nil"
 			return ""
 		}
-		return fmt.Sprintf("%v", v.Interface())
+		i := v.Interface()
+		switch i := i.(type) {
+		case string:
+			return i
+		// TODO(adphi): add options to print []byte as hex or base64 or string
+		case []byte:
+			return fmt.Sprintf("%v", i)
+		// timestamppb.Timestamp
+		case interface{ AsTime() time.Time }:
+			return i.AsTime().String()
+		// durationpb.Duration
+		case interface{ AsDuration() time.Duration }:
+			return i.AsDuration().String()
+		case fmt.Stringer:
+			return i.String()
+		default:
+			return fmt.Sprintf("%v", i)
+		}
 	})
 }
 

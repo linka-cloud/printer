@@ -15,6 +15,7 @@
 package printer
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -71,9 +72,9 @@ func RandomT1(depth int) T1 {
 		CBool:       If(rand.Intn(2) == 0, true, false),
 		Dur:         time.Duration(rand.Intn(int(time.Hour.Milliseconds()))),
 		Time:        time.UnixMicro(rand.Int63n(time.Now().UnixMicro())),
-		Object:      P(If(depth >= 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })()),
-		Noop:        If(depth >= 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })(),
-		noop:        If(depth >= 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })(),
+		Object:      P(If(depth > 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })()),
+		Noop:        If(depth > 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })(),
+		noop:        If(depth > 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })(),
 		OtherObject: If(rand.Intn(4) > 1, &T2{}, nil),
 		Slice:       slices.Map(make([]int, 4), func(_ int) int { return rand.Intn(42) }),
 	}
@@ -88,52 +89,69 @@ func RandomT1Slice(n int, depth int) []T1 {
 }
 
 type testCase struct {
-	name string
-	opts []Option
+	name  string
+	opts  []Option
+	count int
 }
 
 func TestPrint(t *testing.T) {
 	tcs := []testCase{
 		{
-			name: "default",
+			name:  "default",
+			count: 10,
 		},
 		{
-			name: "max 3",
-			opts: []Option{WithMax(3)},
+			name:  "max 3",
+			opts:  []Option{WithMax(3)},
+			count: 10,
 		},
 		{
-			name: "fields selection",
-			opts: []Option{WithFields("AString", "BInt", "CBool", "Dur", "Time")},
+			name:  "fields selection",
+			opts:  []Option{WithFields("AString", "BInt", "CBool", "Dur", "Time")},
+			count: 10,
 		},
 		{
-			name: "upper headers",
-			opts: []Option{WithUpperHeaders()},
+			name:  "upper headers",
+			opts:  []Option{WithUpperHeaders()},
+			count: 10,
 		},
 		{
-			name: "no headers",
-			opts: []Option{WithNoHeaders()},
+			name:  "no headers",
+			opts:  []Option{WithNoHeaders()},
+			count: 10,
 		},
 		{
-			name: "lower all",
-			opts: []Option{WithLowerValues(), WithLowerHeaders()},
+			name:  "lower all",
+			opts:  []Option{WithLowerValues(), WithLowerHeaders()},
+			count: 10,
 		},
 		{
-			name: "json",
-			opts: []Option{WithJSON()},
+			name:  "json",
+			opts:  []Option{WithJSON()},
+			count: 3,
 		},
 		{
-			name: "yaml",
-			opts: []Option{WithYAML()},
+			name: "pretty json",
+			opts: []Option{WithJSON(), WithJSONMarshaler(func(v interface{}) ([]byte, error) {
+				return json.MarshalIndent(v, "", "  ")
+			})},
+			count: 2,
 		},
 		{
-			name: "ghodss yaml",
-			opts: []Option{WithYAML(), WithYAMLMarshaler(yaml.Marshal)},
+			name:  "yaml",
+			opts:  []Option{WithYAML()},
+			count: 2,
+		},
+		{
+			name:  "ghodss yaml",
+			opts:  []Option{WithYAML(), WithYAMLMarshaler(yaml.Marshal)},
+			count: 2,
 		},
 	}
 	for _, v := range tcs {
 		t.Run(v.name, func(t *testing.T) {
 			fmt.Println()
-			data := RandomT1Slice(10, 1)
+			data := RandomT1Slice(v.count, 1)
 			if err := Print(data, v.opts...); err != nil {
 				t.Error(err)
 			}
