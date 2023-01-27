@@ -15,7 +15,7 @@ The main exported function is `Print` which takes any value as input and prints 
 
 The table is formatted using the struct's `printer` tags.
 
-It is expected to have the following format: `printer:"<column name>(,<column order>)"`, or `printer:"-"` to ignore the field.
+It is expected to have the following format: `printer:"<column name: string>(,<column order: int>)"`, or `printer:"-"` to ignore the field.
 
 If no `printer` tag is found, the field name is used as the column name.
 
