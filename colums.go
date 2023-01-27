@@ -78,7 +78,7 @@ func (c columns) Headers() []string {
 func (c columns) Values(v any, f map[string]func(v any) string) []string {
 	val := derefValue(reflect.ValueOf(v))
 	return slices.Map(c.Exported().Sort(), func(c column) string {
-		if fn, ok := f[c.header]; ok {
+		if fn, ok := f[c.name]; ok {
 			return fn(v)
 		}
 		v := derefValue(val.Field(c.index))
