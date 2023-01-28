@@ -55,12 +55,13 @@ func Print(v any, opts ...Option) (err error) {
 		}
 	}()
 	p := printer{
-		writer:     tabwriter.NewWriter(os.Stdout, 4, 4, 4, ' ', 0),
-		format:     Table,
-		max:        math.MaxInt,
-		json:       json.Marshal,
-		yaml:       yaml.Marshal,
-		formatters: make(map[string]func(v any) string),
+		writer:         tabwriter.NewWriter(os.Stdout, 4, 4, 4, ' ', 0),
+		format:         Table,
+		max:            math.MaxInt,
+		json:           json.Marshal,
+		yaml:           yaml.Marshal,
+		formatters:     make(map[string]func(v any) string),
+		typeFormatters: make(map[any]func(v any) string),
 	}
 	for _, v := range opts {
 		v(&p)
@@ -122,7 +123,7 @@ func Print(v any, opts ...Option) (err error) {
 			}
 		}
 		for _, v := range arr(v) {
-			row := strings.Join(cols.Values(v, p.formatters)[:p.max], "\t")
+			row := strings.Join(cols.Values(v, p.formatters, p.typeFormatters)[:p.max], "\t")
 			if p.LowerValues {
 				row = strings.ToLower(row)
 			}

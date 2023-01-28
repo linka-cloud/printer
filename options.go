@@ -23,18 +23,19 @@ type Encoder func(v any) ([]byte, error)
 type Option func(*printer)
 
 type printer struct {
-	format       Format
-	max          int
-	noHeaders    bool
-	UpperHeaders bool
-	LowerHeaders bool
-	UpperValues  bool
-	LowerValues  bool
-	writer       *tabwriter.Writer
-	json         Encoder
-	yaml         Encoder
-	formatters   map[string]func(v any) string
-	fields       []string
+	format         Format
+	max            int
+	noHeaders      bool
+	UpperHeaders   bool
+	LowerHeaders   bool
+	UpperValues    bool
+	LowerValues    bool
+	writer         *tabwriter.Writer
+	json           Encoder
+	yaml           Encoder
+	formatters     map[string]func(v any) string
+	typeFormatters map[any]func(v any) string
+	fields         []string
 }
 
 func WithJSON() Option {
@@ -121,6 +122,14 @@ func WithFormatter(fieldName string, fn func(v any) string) Option {
 	return func(p *printer) {
 		if fn != nil {
 			p.formatters[fieldName] = fn
+		}
+	}
+}
+
+func WithTypeFormatter(t any, fn func(v any) string) Option {
+	return func(p *printer) {
+		if fn != nil {
+			p.typeFormatters[t] = fn
 		}
 	}
 }

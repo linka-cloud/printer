@@ -61,12 +61,7 @@ func (c columns) Filter(fields ...string) columns {
 		return c
 	}
 	return slices.Filter(c, func(v column) bool {
-		for _, f := range fields {
-			if v.name == f {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(fields, v.name)
 	})
 }
 
@@ -76,11 +71,16 @@ func (c columns) Headers() []string {
 	})
 }
 
-func (c columns) Values(v any, f map[string]func(v any) string) []string {
+func (c columns) Values(v any, f map[string]func(v any) string, tf map[any]func(v any) string) []string {
 	val := derefValue(reflect.ValueOf(v))
 	return slices.Map(c.Exported().Sort(), func(c column) string {
 		if fn, ok := f[c.name]; ok {
 			return fn(v)
+		}
+		for k, v := range tf {
+			if reflect.ValueOf(k).Type().AssignableTo(val.Field(c.index).Type()) {
+				return v(val.Field(c.index).Interface())
+			}
 		}
 		v := derefValue(val.Field(c.index))
 		if !v.IsValid() {

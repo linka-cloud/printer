@@ -27,11 +27,11 @@ If no `printer` tag is found, the field name is used as the column name.
 package printer // import "go.linka.cloud/printer"
 
 
-// FUNCTIONS
+FUNCTIONS
 
 func Print(v any, opts ...Option) (err error)
 
-// TYPES
+TYPES
 
 type Encoder func(v any) ([]byte, error)
 
@@ -63,6 +63,8 @@ func WithLowerValues() Option
 func WithMax(max int) Option
 
 func WithNoHeaders() Option
+
+func WithTypeFormatter(t any, fn func(v any) string) Option
 
 func WithUpperHeaders() Option
 

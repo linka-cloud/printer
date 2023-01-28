@@ -31,3 +31,12 @@ func Filter[T any](v []T, fn func(T) bool) []T {
 	}
 	return out
 }
+
+func Contains[T comparable](s []T, e T) bool {
+	for _, v := range s {
+		if e == v {
+			return true
+		}
+	}
+	return false
+}

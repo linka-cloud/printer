@@ -95,6 +95,11 @@ type testCase struct {
 }
 
 func TestPrint(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("panic: %v", r)
+		}
+	}()
 	tcs := []testCase{
 		{
 			name:  "default",
@@ -146,6 +151,13 @@ func TestPrint(t *testing.T) {
 			name:  "ghodss yaml",
 			opts:  []Option{WithYAML(), WithYAMLMarshaler(yaml.Marshal)},
 			count: 2,
+		},
+		{
+			name: "type formatter",
+			opts: []Option{WithTypeFormatter(time.Time{}, func(v interface{}) string {
+				return v.(time.Time).Format(time.RFC3339)
+			})},
+			count: 4,
 		},
 	}
 	for _, v := range tcs {
