@@ -71,14 +71,14 @@ func (c columns) Headers() []string {
 	})
 }
 
-func (c columns) Values(v any, f map[string]func(v any) string, tf map[any]func(v any) string) []string {
+func (c columns) Values(v any, f map[string]func(v any) string, tf map[reflect.Type]func(v any) string) []string {
 	val := derefValue(reflect.ValueOf(v))
 	return slices.Map(c.Exported().Sort(), func(c column) string {
 		if fn, ok := f[c.name]; ok {
 			return fn(v)
 		}
 		for k, v := range tf {
-			if reflect.ValueOf(k).Type().AssignableTo(val.Field(c.index).Type()) {
+			if k.AssignableTo(val.Field(c.index).Type()) {
 				return v(val.Field(c.index).Interface())
 			}
 		}
@@ -110,11 +110,10 @@ func (c columns) Values(v any, f map[string]func(v any) string, tf map[any]func(
 
 func makeColumns(v any) (columns, error) {
 	var columns columns
-	t := reflect.TypeOf(v)
+	t := derefType(reflect.TypeOf(v))
 	if t.Kind() == reflect.Slice {
 		t = t.Elem()
 	}
-	t = derefType(t)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tag := field.Tag.Get("print")

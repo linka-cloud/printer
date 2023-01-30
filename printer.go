@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"reflect"
 	"runtime/debug"
 	"strings"
 	"text/tabwriter"
@@ -61,7 +62,7 @@ func Print(v any, opts ...Option) (err error) {
 		json:           json.Marshal,
 		yaml:           yaml.Marshal,
 		formatters:     make(map[string]func(v any) string),
-		typeFormatters: make(map[any]func(v any) string),
+		typeFormatters: make(map[reflect.Type]func(v any) string),
 	}
 	for _, v := range opts {
 		v(&p)

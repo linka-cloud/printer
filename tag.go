@@ -24,7 +24,7 @@ import (
 func parseTag(index int, fieldName, tag string) (column, error) {
 	parts := strings.Split(tag, ",")
 	if len(parts) > 2 {
-		return column{}, fmt.Errorf("invalid tag for field %q: %q, tag should be `print:\"(name),(order)\"` or `print:\"-\"", fieldName, tag)
+		return column{}, fmt.Errorf("invalid tag for field %q: %q, tag should be `print:\"(name string),(order int)\"` or `print:\"-\"", fieldName, tag)
 	}
 	c := column{name: fieldName, header: fieldName, order: index}
 	for _, v := range parts {
@@ -46,6 +46,9 @@ func parseTag(index int, fieldName, tag string) (column, error) {
 
 func arr(v any) []any {
 	r := reflect.ValueOf(v)
+	if r.Kind() == reflect.Ptr && r.Elem().Kind() == reflect.Slice {
+		r = r.Elem()
+	}
 	if r.Kind() != reflect.Slice {
 		return []any{v}
 	}

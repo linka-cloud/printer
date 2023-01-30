@@ -15,6 +15,7 @@
 package printer
 
 import (
+	"reflect"
 	"text/tabwriter"
 )
 
@@ -34,7 +35,7 @@ type printer struct {
 	json           Encoder
 	yaml           Encoder
 	formatters     map[string]func(v any) string
-	typeFormatters map[any]func(v any) string
+	typeFormatters map[reflect.Type]func(v any) string
 	fields         []string
 }
 
@@ -129,7 +130,7 @@ func WithFormatter(fieldName string, fn func(v any) string) Option {
 func WithTypeFormatter(t any, fn func(v any) string) Option {
 	return func(p *printer) {
 		if fn != nil {
-			p.typeFormatters[t] = fn
+			p.typeFormatters[reflect.TypeOf(t)] = fn
 		}
 	}
 }

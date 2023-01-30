@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -106,6 +108,10 @@ func TestPrint(t *testing.T) {
 			count: 10,
 		},
 		{
+			name:  "slice pointer",
+			count: 10,
+		},
+		{
 			name:  "max 3",
 			opts:  []Option{WithMax(3)},
 			count: 10,
@@ -154,9 +160,16 @@ func TestPrint(t *testing.T) {
 		},
 		{
 			name: "type formatter",
-			opts: []Option{WithTypeFormatter(time.Time{}, func(v interface{}) string {
-				return v.(time.Time).Format(time.RFC3339)
-			})},
+			opts: []Option{
+				WithTypeFormatter(time.Time{}, func(v interface{}) string {
+					return v.(time.Time).Format(time.RFC3339)
+				}),
+				WithTypeFormatter([]int{}, func(v interface{}) string {
+					return strings.Join(slices.Map(v.([]int), func(v int) string {
+						return strconv.Itoa(v)
+					}), " ")
+				}),
+			},
 			count: 4,
 		},
 	}
@@ -164,7 +177,7 @@ func TestPrint(t *testing.T) {
 		t.Run(v.name, func(t *testing.T) {
 			fmt.Println()
 			data := RandomT1Slice(v.count, 1)
-			if err := Print(data, v.opts...); err != nil {
+			if err := Print(&data, v.opts...); err != nil {
 				t.Error(err)
 			}
 			fmt.Println()
