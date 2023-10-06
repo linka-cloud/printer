@@ -49,6 +49,23 @@ func (f Format) String() string {
 	}
 }
 
+func Formats() []Format {
+	return []Format{Table, JSON, YAML}
+}
+
+func ParseFormat(s string) (Format, error) {
+	switch strings.ToLower(s) {
+	case "table":
+		return Table, nil
+	case "json":
+		return JSON, nil
+	case "yaml":
+		return YAML, nil
+	default:
+		return Table, fmt.Errorf("unknown format %q", s)
+	}
+}
+
 func Print(v any, opts ...Option) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
