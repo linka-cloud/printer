@@ -29,17 +29,18 @@ import (
 )
 
 type T1 struct {
-	AString     string        `json:"fieldA" yaml:"field_a" print:"STRING,3"`
-	BInt        int           `json:"fieldB" yaml:"field_b" print:"INT,4"`
-	CBool       bool          `json:"fieldC" yaml:"field_c" print:"BOOL,2"`
-	Dur         time.Duration `json:"fieldD" yaml:"field_d" print:"DURATION,1"`
-	Time        time.Time     `json:"fieldT" yaml:"field_t" print:"TIME,4"`
-	Object      *T1           `json:"fieldO" yaml:"field_o" print:"OBJECT,5"`
-	Noop        any           `json:"-" yaml:"-" print:"-"`
-	noop        any
-	OtherObject *T2
-	Slice       []int
-	Zero        int `json:"fieldZ" yaml:"field_z" print:"This one is always zero,42"`
+	AString      string        `json:"fieldA" yaml:"field_a" print:"STRING,3"`
+	BInt         int           `json:"fieldB" yaml:"field_b" print:"INT,4"`
+	CBool        bool          `json:"fieldC" yaml:"field_c" print:"BOOL,2"`
+	Dur          time.Duration `json:"fieldD" yaml:"field_d" print:"DURATION,1"`
+	Time         time.Time     `json:"fieldT" yaml:"field_t" print:"TIME,4"`
+	Object       *T1           `json:"fieldO" yaml:"field_o" print:"OBJECT,5"`
+	Noop         any           `json:"-" yaml:"-" print:"-"`
+	noop         any
+	OtherObject  *T2
+	NestedObject *T3 `json:"nestedObject" yaml:"nested_object" print:"NESTED"`
+	Slice        []int
+	Zero         int `json:"fieldZ" yaml:"field_z" print:"This one is always zero,42"`
 }
 
 func (t T1) String() string {
@@ -52,6 +53,10 @@ type T2 struct {
 
 func (t T2) String() string {
 	return "struct 2"
+}
+
+type T3 struct {
+	A string `print:"A"`
 }
 
 func If[T any](cond bool, t, f T) T {
@@ -68,17 +73,18 @@ func P[T any](v T) *T {
 func RandomT1(depth int) T1 {
 	return T1{
 		AString: string(slices.Map(make([]int32, rand.Intn(8)+4), func(_ int32) rune {
-			return []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")[rand.Intn(32)]
+			return []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ")[rand.Intn(32)]
 		})),
-		BInt:        rand.Intn(42),
-		CBool:       If(rand.Intn(2) == 0, true, false),
-		Dur:         time.Duration(rand.Intn(int(time.Hour.Milliseconds()))),
-		Time:        time.UnixMicro(rand.Int63n(time.Now().UnixMicro())),
-		Object:      P(If(depth > 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })()),
-		Noop:        If(depth > 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })(),
-		noop:        If(depth > 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })(),
-		OtherObject: If(rand.Intn(4) > 1, &T2{}, nil),
-		Slice:       slices.Map(make([]int, 4), func(_ int) int { return rand.Intn(42) }),
+		BInt:         rand.Intn(42),
+		CBool:        If(rand.Intn(2) == 0, true, false),
+		Dur:          time.Duration(rand.Intn(int(time.Hour.Milliseconds()))),
+		Time:         time.UnixMicro(rand.Int63n(time.Now().UnixMicro())),
+		Object:       P(If(depth > 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })()),
+		Noop:         If(depth > 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })(),
+		noop:         If(depth > 0, func() T1 { return RandomT1(depth - 1) }, func() T1 { return T1{} })(),
+		OtherObject:  If(rand.Intn(4) > 1, &T2{A: "A"}, nil),
+		NestedObject: If(rand.Intn(4) > 1, &T3{A: "A"}, nil),
+		Slice:        slices.Map(make([]int, 4), func(_ int) int { return rand.Intn(42) }),
 	}
 }
 
@@ -157,6 +163,19 @@ func TestPrint(t *testing.T) {
 			name:  "ghodss yaml",
 			opts:  []Option{WithYAML(), WithYAMLMarshaler(yaml.Marshal)},
 			count: 2,
+		},
+		{
+			name: "formatter",
+			opts: []Option{
+				WithFormatter("NestedObject", func(v any) string {
+					f, ok := v.(T3)
+					if !ok {
+						t.Fatalf("v is %T expected T3", v)
+					}
+					return f.A
+				}),
+			},
+			count: 1,
 		},
 		{
 			name: "type formatter",

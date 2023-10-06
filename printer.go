@@ -81,10 +81,8 @@ func Print(v any, opts ...Option) (err error) {
 		if err != nil {
 			return err
 		}
-		if _, err = fmt.Fprintln(p.writer, string(b)); err != nil {
-			return err
-		}
-		return p.writer.Flush()
+		fmt.Println(string(b))
+		return nil
 	case YAML:
 		var (
 			b   []byte
@@ -98,10 +96,8 @@ func Print(v any, opts ...Option) (err error) {
 		if err != nil {
 			return err
 		}
-		if _, err = fmt.Fprintln(p.writer, string(b)); err != nil {
-			return err
-		}
-		return p.writer.Flush()
+		fmt.Println(string(b))
+		return nil
 	case Table:
 		cols, err := makeColumns(v)
 		if err != nil {
@@ -139,5 +135,4 @@ func Print(v any, opts ...Option) (err error) {
 	default:
 		return fmt.Errorf("unknown format %q", p.format)
 	}
-
 }
