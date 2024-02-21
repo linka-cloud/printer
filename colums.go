@@ -112,7 +112,7 @@ func makeColumns(v any) (columns, error) {
 	var columns columns
 	t := derefType(reflect.TypeOf(v))
 	if t.Kind() == reflect.Slice {
-		t = t.Elem()
+		t = derefType(t.Elem())
 	}
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
